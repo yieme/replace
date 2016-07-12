@@ -28,11 +28,8 @@ module.exports = function(options) {
         options.color = "cyan";
     }
 
-    fs.writeFileSync(tmpFilename + '.search', options.regex)
-    fs.writeFileSync(tmpFilename + '.replacement', options.replacement)
-
-    var searchBuffer = fs.readFileSync(tmpFilename + '.search')
-    var replaceBuffer = fs.readFileSync(tmpFilename + '.replacement')
+    var searchBuffer = new Buffer(options.regex.toString("binary"))
+    var replaceBuffer = new Buffer(options.replacement.toString("binary"))
     var injector = miss.through(
       function (chunk, enc, cb) {
         var index = bufferIndexOf(chunk, searchBuffer)
