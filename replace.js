@@ -28,6 +28,25 @@ module.exports = function(options) {
         options.color = "cyan";
     }
 
+    var searchBuffer = new Buffer(options.regex)
+    var replaceBuffer = new Buffer(options.replacement)
+    var injector = miss.through(
+      function (chunk, enc, cb) {
+        var index = bufferIndexOf(chunk, searchBuffer)
+        if (index > 0) {
+          var headBuf = chunk.slice(0, index)
+          var tailBuf = chunk.slice(index + options.regex.length, chunk.length)
+          var resultBuffer = Buffer.concat([headBuf, replaceBuffer, tailBuf])
+          cb(null, resultBuffer)
+        } else {
+          cb(null, chunk)
+        }
+      },
+      function (cb) {
+        cb(null)
+      }
+    )
+
     var flags = "g"; // global multiline
     if (options.ignoreCase) {
         flags += "i";
@@ -98,29 +117,6 @@ module.exports = function(options) {
             if (options.encoding === null || options.encoding === 'null') {
               var readStream = fs.createReadStream(file, { bufferSize: 1024 * 1024 }) // 1MB buffer, therefore most files shouldn't enounter boundary misses
               var tempStream = fs.createWriteStream(tmpFilename)
-              var searchBuffer = new Buffer(options.regex)
-              var lowerSearchBuffer = new Buffer(options.regex.toLowerCase())
-              var upperSearchBuffer = new Buffer(options.regex.toUpperCase())
-              var searchBuffer = new Buffer(options.regex)
-              var replaceBuffer = new Buffer(options.replacement)
-              var injector = miss.through(
-                function (chunk, enc, cb) {
-                  var index = bufferIndexOf(chunk, searchBuffer)
-                  if (index < 1 && options.ignoreCase) index = bufferIndexOf(chunk, lowerSearchBuffer)
-                  if (index < 1 && options.ignoreCase) index = bufferIndexOf(chunk, upperSearchBuffer)
-                  if (index > 0) {
-                    var headBuf = chunk.slice(0, index)
-                    var tailBuf = chunk.slice(index + options.regex.length, chunk.length)
-                    var resultBuffer = Buffer.concat([headBuf, replaceBuffer, tailBuf])
-                    cb(null, resultBuffer)
-                  } else {
-                    cb(null, chunk)
-                  }
-                },
-                function (cb) {
-                  cb(null)
-                }
-              )
 
               miss.pipe(readStream, injector, tempStream, function (err) {
                 if (err) return console.error(err)
