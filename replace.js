@@ -4,11 +4,13 @@ var fs = require("fs"),
     minimatch = require("minimatch"),
     sharedOptions = require("./bin/shared-options");
 var path = require('path')
-var miss = require('mississippi')
 var bufferIndexOf = require('buffer-indexof');
 require('buffer-concat');
 var os = require('os')
-var tmpFilename = path.join(os.tmpdir(), 'replace' + Math.random())
+var tmpFilename = path.join(os.tmpdir(), 'replace')
+var processStack = []
+var writeBlock = false;
+var ProgressBar = require('progress');
 
 module.exports = function(options) {
     // If the path is the same as the default and the recursive option was not
@@ -24,6 +26,77 @@ module.exports = function(options) {
     var lineCount = 0,
         limit = 400; // chars per line
 
+    var bar = null
+    var barSteps = 0
+
+    function handleStack() {
+      if (!writeBlock && (processStack.length > 0)) {
+        if (!bar) {
+          bar = new ProgressBar('  processing [:bar] :percent of '+processStack.length+' :etas', {
+            complete: '=',
+            incomplete: ' ',
+            width: 20,
+            total: processStack.length
+          });
+          setInterval(function() {
+            if (barSteps > 0) {
+              bar.tick(barSteps)
+              barSteps = 0
+            }
+          }, 500)
+        }
+        writeBlock = true;
+        var file = processStack.pop()
+//        var len  = processStack.length + 1;
+//        console.error(len, '-', file, '...')
+//        var tmpFil = tmpFilename + Math.random()
+        var readStream = fs.createReadStream(file, { bufferSize: 64 * 1024 }) // 1MB buffer, therefore most files shouldn't enounter boundary misses
+        var tempStream = fs.createWriteStream(tmpFilename)
+
+        var miss = require('mississippi')
+        var injector = miss.through(
+          function (chunk, enc, cb) {
+            var index = bufferIndexOf(chunk, searchBuffer)
+            if (index < 1 && options.ignore) index = bufferIndexOf(chunk, lowerSearchBuffer)
+            if (index < 1 && options.ignore) index = bufferIndexOf(chunk, upperSearchBuffer)
+            if (index > 0) {
+              var headBuf = chunk.slice(0, index)
+              var tailBuf = chunk.slice(index + options.regex.length, chunk.length)
+              var resultBuffer = Buffer.concat([headBuf, replaceBuffer, tailBuf])
+              cb(null, resultBuffer)
+            } else {
+              cb(null, chunk)
+            }
+          },
+          function (cb) {
+            cb(null)
+          }
+        )
+
+        miss.pipe(readStream, injector, tempStream, function (err) {
+          if (err) return console.error('miss.pipe injector: ', err)
+//          if (fs.existsSync(tmpFil)) {
+            var tempStream2 = fs.createReadStream(tmpFilename)
+            var writeStream = fs.createWriteStream(file)
+            writeStream.on('close', function() {
+              barSteps++
+              writeBlock = false
+              if (processStack.length < 1) {
+                setTimeout(function() {
+                  process.exit(0)
+                }, 1000)
+              }
+            })
+            tempStream2.pipe(writeStream)
+  //        } else {
+  //          console.log('Error, missing:', tmpFil, 'for', file)
+  //          writeBlock = false
+  //        }
+        })
+      }
+    }
+    setInterval(handleStack, 0)
+
     if (!options.color) {
         options.color = "cyan";
     }
@@ -32,24 +105,6 @@ module.exports = function(options) {
     var lowerSearchBuffer = new Buffer(options.regex.toLowerCase())
     var upperSearchBuffer = new Buffer(options.regex.toUpperCase())
     var replaceBuffer = new Buffer(options.replacement)
-    var injector = miss.through(
-      function (chunk, enc, cb) {
-        var index = bufferIndexOf(chunk, searchBuffer)
-        if (index < 1 && options.ignore) index = bufferIndexOf(chunk, lowerSearchBuffer)
-        if (index < 1 && options.ignore) index = bufferIndexOf(chunk, upperSearchBuffer)
-        if (index > 0) {
-          var headBuf = chunk.slice(0, index)
-          var tailBuf = chunk.slice(index + options.regex.length, chunk.length)
-          var resultBuffer = Buffer.concat([headBuf, replaceBuffer, tailBuf])
-          cb(null, resultBuffer)
-        } else {
-          cb(null, chunk)
-        }
-      },
-      function (cb) {
-        cb(null)
-      }
-    )
 
     var flags = "g"; // global multiline
     if (options.ignoreCase) {
@@ -127,16 +182,7 @@ module.exports = function(options) {
           }
           if (isFile) {
             if (options.encoding === null || options.encoding === 'null') {
-              var readStream = fs.createReadStream(file, { bufferSize: 1024 * 1024 }) // 1MB buffer, therefore most files shouldn't enounter boundary misses
-              var tempStream = fs.createWriteStream(tmpFilename)
-
-              miss.pipe(readStream, injector, tempStream, function (err) {
-                if (err) return console.error(err)
-                var tempStream2 = fs.createReadStream(tmpFilename)
-                var writeStream = fs.createWriteStream(file)
-                tempStream2.pipe(writeStream)
-              })
-
+              processStack.push(file)
             } else {
               fs.readFile(file, "utf-8", function(err, text) {
                   if (err) {
@@ -179,16 +225,7 @@ module.exports = function(options) {
       }
       if (isFile) {
         if (options.encoding === null || options.encoding === 'null') {
-          var readStream = fs.createReadStream(file, { bufferSize: 1024 * 1024 }) // 1MB buffer, therefore most files shouldn't enounter boundary misses
-          var tempStream = fs.createWriteStream(tmpFilename)
-
-          miss.pipe(readStream, injector, tempStream, function (err) {
-            if (err) return console.error(err)
-            var tempStream2 = fs.createReadStream(tmpFilename)
-            var writeStream = fs.createWriteStream(file)
-            tempStream2.pipe(writeStream)
-          })
-
+          processStack.push(file)
         } else {
           var text = fs.readFileSync(file, "utf-8");
           text = replacizeText(text, file);

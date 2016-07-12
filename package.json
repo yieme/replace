@@ -15,7 +15,8 @@
   "dependencies": {
     "colors": "0.5.x",
     "minimatch": "~0.2.9",
-    "nomnom": "1.6.x"
+    "nomnom": "1.6.x",
+    "progress": "^1.1.8"
   },
   "devDependencies": {
     "tape": "~0.2.2"
