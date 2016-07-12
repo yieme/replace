@@ -13,9 +13,10 @@
     "test": "tap test"
   },
   "dependencies": {
-    "nomnom": "1.6.x",
     "colors": "0.5.x",
-    "minimatch": "~0.2.9"
+    "graceful-js": "^1.0.0",
+    "minimatch": "~0.2.9",
+    "nomnom": "1.6.x"
   },
   "devDependencies": {
     "tape": "~0.2.2"
