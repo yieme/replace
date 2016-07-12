@@ -29,10 +29,14 @@ module.exports = function(options) {
     }
 
     var searchBuffer = new Buffer(options.regex)
+    var lowerSearchBuffer = new Buffer(options.regex.toLowerCase())
+    var upperSearchBuffer = new Buffer(options.regex.toUpperCase())
     var replaceBuffer = new Buffer(options.replacement)
     var injector = miss.through(
       function (chunk, enc, cb) {
         var index = bufferIndexOf(chunk, searchBuffer)
+        if (index < 1 && options.ignore) index = bufferIndexOf(chunk, lowerSearchBuffer)
+        if (index < 1 && options.ignore) index = bufferIndexOf(chunk, upperSearchBuffer)
         if (index > 0) {
           var headBuf = chunk.slice(0, index)
           var tailBuf = chunk.slice(index + options.regex.length, chunk.length)
