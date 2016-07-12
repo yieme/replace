@@ -28,8 +28,8 @@ module.exports = function(options) {
         options.color = "cyan";
     }
 
-    var searchBuffer = new Buffer(options.regex.toString("binary"))
-    var replaceBuffer = new Buffer(options.replacement.toString("binary"))
+    var searchBuffer = new Buffer(options.regex)
+    var replaceBuffer = new Buffer(options.replacement)
     var injector = miss.through(
       function (chunk, enc, cb) {
         var index = bufferIndexOf(chunk, searchBuffer)
@@ -129,7 +129,7 @@ module.exports = function(options) {
               fs.readFile(file, "utf-8", function(err, text) {
                   if (err) {
                       if (err.code == 'EMFILE') {
-                          console.log('Too many files, try running `replace` without --async');
+                          console.error('Too many files, try running `replace` without --async');
                           process.exit(1);
                       }
                       throw err;
@@ -166,12 +166,24 @@ module.exports = function(options) {
           return;
       }
       if (isFile) {
-          var text = fs.readFileSync(file, "utf-8");
+        if (options.encoding === null || options.encoding === 'null') {
+          var readStream = fs.createReadStream(file, { bufferSize: 1024 * 1024 }) // 1MB buffer, therefore most files shouldn't enounter boundary misses
+          var tempStream = fs.createWriteStream(tmpFilename)
 
+          miss.pipe(readStream, injector, tempStream, function (err) {
+            if (err) return console.error(err)
+            var tempStream2 = fs.createReadStream(tmpFilename)
+            var writeStream = fs.createWriteStream(file)
+            tempStream2.pipe(writeStream)
+          })
+
+        } else {
+          var text = fs.readFileSync(file, "utf-8");
           text = replacizeText(text, file);
           if (canReplace && text !== null) {
               fs.writeFileSync(file, text);
           }
+        }
       }
       else if (stats.isDirectory() && options.recursive) {
           var files = fs.readdirSync(file);
