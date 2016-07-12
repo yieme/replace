@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "colors": "0.5.x",
-    "graceful-js": "^1.0.0",
+    "graceful-fs": "^4.1.4",
     "minimatch": "~0.2.9",
     "nomnom": "1.6.x"
   },
