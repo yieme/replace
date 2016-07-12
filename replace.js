@@ -7,6 +7,7 @@ var path = require('path')
 var miss = require('mississippi')
 var bufferIndexOf = require('buffer-indexof');
 require('buffer-concat');
+var os = require('os')
 var tmpFilename = path.join(os.tmpdir(), 'replace' + Math.random())
 
 module.exports = function(options) {
