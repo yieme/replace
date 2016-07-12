@@ -14,7 +14,7 @@ module.exports = function(options) {
     // If the path is the same as the default and the recursive option was not
     // specified, search recursively under the current directory as a
     // convenience.
-    if (options.paths.length === 1 &&
+    if (options && options.paths && options.paths.length === 1 &&
         options.paths[0] === sharedOptions.paths.default[0] &&
         !options.hasOwnProperty('recursive')) {
         options.paths = ['.'];
@@ -85,13 +85,21 @@ module.exports = function(options) {
         eval('replaceFunc = ' + fs.readFileSync(options.funcFile, "utf-8"));
     }
 
-    for (var i = 0; i < options.paths.length; i++) {
+
+    if (options.stdio) {
+      miss.pipe(process.stdin, injector, process.stdout, function (err) {
+        if (err) return console.error(err)
+      })
+
+    } else {
+      for (var i = 0; i < options.paths.length; i++) {
         if (options.async) {
             replacizeFile(options.paths[i]);
         }
         else {
             replacizeFileSync(options.paths[i]);
         }
+      }
     }
 
     function canSearch(file, isFile) {
