@@ -3,6 +3,11 @@ var fs = require("fs"),
     colors = require("colors"),
     minimatch = require("minimatch"),
     sharedOptions = require("./bin/shared-options");
+var path = require('path')
+var miss = require('mississippi')
+var bufferIndexOf = require('buffer-indexof');
+require('buffer-concat');
+var tmpFilename = path.join(os.tmpdir(), 'replace' + Math.random())
 
 module.exports = function(options) {
     // If the path is the same as the default and the recursive option was not
@@ -89,6 +94,36 @@ module.exports = function(options) {
               return;
           }
           if (isFile) {
+            if (options.encoding === null || options.encoding === 'null') {
+              var readStream = fs.createReadStream(file, { bufferSize: 1024 * 1024 }) // 1MB buffer, therefore most files shouldn't enounter boundary misses
+              var tempStream = fs.createWriteStream(tmpFilename)
+              var searchBuffer = new Buffer(options.regex)
+              var replaceBuffer = new Buffer(options.replacement)
+              var injector = miss.through(
+                function (chunk, enc, cb) {
+                  var index = bufferIndexOf(chunk, searchBuffer)
+                  if (index > 0) {
+                    var headBuf = chunk.slice(0, index)
+                    var tailBuf = chunk.slice(index + options.regex.length, chunk.length)
+                    var resultBuffer = Buffer.concat([headBuf, replaceBuffer, tailBuf])
+                    cb(null, resultBuffer)
+                  } else {
+                    cb(null, chunk)
+                  }
+                },
+                function (cb) {
+                  cb(null)
+                }
+              )
+
+              miss.pipe(readStream, injector, tempStream, function (err) {
+                if (err) return console.error(err)
+                var tempStream2 = fs.createReadStream(tmpFilename)
+                var writeStream = fs.createWriteStream(file)
+                tempStream2.pipe(writeStream)
+              })
+
+            } else {
               fs.readFile(file, "utf-8", function(err, text) {
                   if (err) {
                       if (err.code == 'EMFILE') {
@@ -105,6 +140,7 @@ module.exports = function(options) {
                       });
                   }
               });
+            }
           }
           else if (stats.isDirectory() && options.recursive) {
               fs.readdir(file, function(err, files) {
