@@ -16,7 +16,9 @@
     "colors": "0.5.x",
     "minimatch": "~0.2.9",
     "nomnom": "1.6.x",
-    "progress": "^1.1.8"
+    "progress": "^1.1.8",
+    "buffer-indexof": "~1.0.0",
+    "buffer-concat": "~0.0.1"
   },
   "devDependencies": {
     "tape": "~0.2.2"
