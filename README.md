@@ -4,11 +4,12 @@
 * Modifies files when matches are found
 * Recursive search on directories with -r
 * Uses [JavaScript syntax](https://developer.mozilla.org/en/JavaScript/Guide/Regular_Expressions#Using_Simple_Patterns) for regular expressions and [replacement strings](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter).
+* Fork of no longer maintained [harthur/replace](https://github.com/harthur/replace)
 
 # Install
 With [node.js](http://nodejs.org/) and [npm](http://github.com/isaacs/npm):
 
-	npm install replace -g
+	npm install replace3 -g
 
 You can now use `replace` and `search` from the command line.
 
@@ -96,4 +97,3 @@ If `replace` is taking too long on a large directory, try turning on the quiet f
 
 ## What it looks like
 ![replace](http://i.imgur.com/qmJjS.png)
-
