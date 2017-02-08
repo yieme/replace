@@ -1,5 +1,10 @@
 var path = require("path");
 
+if (process.argv.indexOf('-v')>=0 || process.argv.indexOf('--version')>=0 ) {
+  console.log(require(path.join(__dirname, "..", "package.json")).version)
+  process.exit(0)
+}
+
 module.exports = {
     regex: {
         position: 0,
@@ -78,5 +83,11 @@ module.exports = {
     noColor: {
       help: 'Disable color output.',
       flag: true
+    },
+    version: {
+      abbr: 'v',
+      help: 'Show version.',
+      flag: true,
+      default: false
     }
 };
