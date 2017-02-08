@@ -1,13 +1,13 @@
 {
-  "name": "replace",
+  "name": "replace3",
   "description": "Command line search and replace utility",
   "license": "MIT",
-  "version": "0.5.4",
-  "author": "Heather Arthur <fayearthur@gmail.com>",
+  "version": "0.6.0",
+  "author": "Yieme",
   "main": "replace.js",
   "repository": {
     "type": "git",
-    "url": "http://github.com/harthur/replace.git"
+    "url": "http://github.com/yieme/replace.git"
   },
   "scripts": {
     "test": "tap test"
