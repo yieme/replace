@@ -13,9 +13,9 @@
     "test": "tap test"
   },
   "dependencies": {
-    "colors": "0.5.x",
-    "minimatch": "~0.2.9",
-    "nomnom": "1.6.x",
+    "colors": "0.5.1",
+    "minimatch": "0.2.14",
+    "nomnom": "1.6.2",
     "progress": "^1.1.8",
     "buffer-indexof": "~1.0.0",
     "buffer-concat": "~0.0.1"
