@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "colors": "0.5.1",
-    "minimatch": "0.2.14",
+    "minimatch": "3.0.3",
     "nomnom": "1.6.2",
     "progress": "^1.1.8",
     "buffer-indexof": "~1.0.0",
