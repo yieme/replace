@@ -2,7 +2,7 @@
   "name": "replace3",
   "description": "Command line search and replace utility",
   "license": "MIT",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "author": "Yieme",
   "main": "replace.js",
   "repository": {
