@@ -21,6 +21,7 @@
     "buffer-concat": "~0.0.1"
   },
   "devDependencies": {
+    "tap": "10.3.1",
     "tape": "~0.2.2"
   },
   "bin": {
