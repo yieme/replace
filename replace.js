@@ -95,7 +95,9 @@ module.exports = function(options) {
         })
       }
     }
-    setInterval(handleStack, 0)
+	if (options.async) {
+		setInterval(handleStack, 0)
+	}
 
     if (!options.color) {
         options.color = "cyan";
